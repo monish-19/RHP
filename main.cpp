@@ -1,9 +1,10 @@
+
 #include <iostream>
 #include <queue>
 #include <unordered_set>
 #include <vector>
-#include <unordered_set>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 class Sofa
@@ -25,6 +26,7 @@ public:
 };
 
 string delim="-";
+
 bool canAdd(int fsr,int fsc,int ssr,int ssc,unordered_set<string> &visited)
 {
     string key = to_string(fsr) + delim + to_string(fsc) + delim + to_string(ssr) + delim + to_string(ssc);
@@ -38,11 +40,15 @@ bool canAdd(int fsr,int fsc,int ssr,int ssc,unordered_set<string> &visited)
 
 int main()
 {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
     int R,C;cin>>R>>C;
     int fsr,fsc,ssr,ssc,sofa_count=0;
     fsr=fsc=ssr=ssc=-1;
     queue<Sofa> q;
     vector<vector<char>> grid(R,vector<char>(C));
+
     for(int row=0;row<R;row++)
     {
         for(int col=0;col<C;col++)
@@ -55,131 +61,173 @@ int main()
                 else
                 {
                     ssr=row,ssc=col;
-                    Sofa s=Sofa(fsr,fsc,ssr,ssc,(fsr==ssr)?'H':'V',0);
-                    q.push(s);
                 }
             }
         }
     }
+
+    if(fsr==-1 || ssr==-1)
+    {
+        cout<<"Impossible"<<endl;
+        return 0;
+    }
+
+    if(fsr==ssr && fsc>ssc) swap(fsc,ssc);
+    if(fsc==ssc && fsr>ssr) swap(fsr,ssr);
+
+    Sofa start(fsr,fsc,ssr,ssc,(fsr==ssr)?'H':'V',0);
+    q.push(start);
+
     unordered_set<string> visited;
+    canAdd(fsr,fsc,ssr,ssc,visited);
+
     while(!q.empty())
     {
         Sofa s=q.front(); q.pop();
-        if (grid[s.fsr][s.fsc]=='S' && grid[s.ssr][s.ssc]=='S')
+
+        if(grid[s.fsr][s.fsc]=='S' && grid[s.ssr][s.ssc]=='S')
         {
-            cout << s.moves+1 << endl;
+            cout<<s.moves<<endl;
             return 0;
         }
 
-        if (s.dir='H')
+        if(s.dir=='H')
         {
-            if (s.ssc<C-1 && grid[s.ssr][s.ssc+1]!='H'){
-                if (canAdd(s.fsr,s.ssc,s.ssr,s.ssc+1,visited)){
-                    Sofa newSofa =Sofa(s.fsr, s.ssc, s.ssr, s.ssc + 1, 'H', s.moves + 1);
-                    q.push(newSofa);
-                }
-            }
-            if (s.fsc-1>0 && grid[s.fsr][s.fsc-1]!='H'){
-                if (canAdd(s.fsr,s.fsc-1,s.ssr,s.fsr,visited)){
-                    Sofa newSofa=Sofa(s.fsr,s.fsc-1,s.ssr,s.fsc,'H',s.moves+1);
-                    q.push(newSofa);
-                }
-            }
-            if (s.fsr-1>0 && s.ssr-1>0 && grid[s.fsr-1][s.ssr-1]!='H')
+            if(s.ssc+1<C && grid[s.ssr][s.ssc+1]!='H')
             {
-                if (canAdd(s.fsr-1,s.fsc,s.ssr-1,s.ssc,visited)){
-                    Sofa newSofa=Sofa(s.fsr-1,s.fsc,s.ssr-1,s.ssc,'H',s.moves+1);
-                    q.push(newSofa);
-                }
-            }
-            if (s.fsr+1<R && s.ssr+1<C && grid[s.fsr+1][s.fsc]!='H' && grid[s.ssr+1][s.ssc]!='H')
-            {
-                if (canAdd(s.fsr+1,s.fsc,s.ssr+1,s.ssc,visited))
+                if(canAdd(s.fsr,s.fsc+1,s.ssr,s.ssc+1,visited))
                 {
-                    Sofa newSofa=Sofa(s.fsr+1,s.fsc,s.ssr+1,s.ssc,'H',s.moves+1);
+                    Sofa newSofa(s.fsr,s.fsc+1,s.ssr,s.ssc+1,'H',s.moves+1);
+                    q.push(newSofa);
+                }
+            }
+            if(s.fsc>0 && grid[s.fsr][s.fsc-1]!='H')
+            {
+                if(canAdd(s.fsr,s.fsc-1,s.ssr,s.ssc-1,visited))
+                {
+                    Sofa newSofa(s.fsr,s.fsc-1,s.ssr,s.ssc-1,'H',s.moves+1);
+                    q.push(newSofa);
+                }
+            }
+            if(s.fsr>0 && grid[s.fsr-1][s.fsc]!='H' && grid[s.ssr-1][s.ssc]!='H')
+            {
+                if(canAdd(s.fsr-1,s.fsc,s.ssr-1,s.ssc,visited))
+                {
+                    Sofa newSofa(s.fsr-1,s.fsc,s.ssr-1,s.ssc,'H',s.moves+1);
+                    q.push(newSofa);
+                }
+            }
+            if(s.ssr+1<R && grid[s.fsr+1][s.fsc]!='H' && grid[s.ssr+1][s.ssc]!='H')
+            {
+                if(canAdd(s.fsr+1,s.fsc,s.ssr+1,s.ssc,visited))
+                {
+                    Sofa newSofa(s.fsr+1,s.fsc,s.ssr+1,s.ssc,'H',s.moves+1);
                     q.push(newSofa);
                 }
             }
 
-            if (s.fsr>0 && grid[s.fsr-1][s.fsc]!='H' && grid[s.ssr-1][s.ssc]!='H')
+
+
+
+            if(s.fsr>0 && grid[s.fsr-1][s.fsc]!='H' && grid[s.fsr-1][s.ssc]!='H')
             {
-                if (canAdd(s.ssr-1,s.ssc,s.ssr,s.ssc,visited)){
-                    Sofa newSofa=Sofa(s.ssr-1,s.ssc,s.ssr,s.ssc,'V',s.moves+1);
+                if(canAdd(s.fsr-1,s.fsc,s.fsr,s.fsc,visited))
+                {
+                    Sofa newSofa(s.fsr-1,s.fsc,s.fsr,s.fsc,'V',s.moves+1);
                     q.push(newSofa);
                 }
-                if (canAdd(s.fsr,s.fsc,s.fsr-1,s.fsc,visited)){
-                    Sofa newSofa=Sofa(s.fsr,s.fsc,s.fsr-1,s.fsc,'V',s.moves+1);
+
+                if(canAdd(s.fsr-1,s.ssc,s.fsr,s.ssc,visited))
+                {
+                    Sofa newSofa(s.fsr-1,s.ssc,s.fsr,s.ssc,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
-            if (s.fsc<C-1 && grid[s.fsr+1][s.fsc]!='H' && grid[s.ssr+1][s.ssc]!='H')
+            if(s.ssr+1<R && grid[s.ssr+1][s.fsc]!='H' && grid[s.ssr+1][s.ssc]!='H')
             {
-                if (canAdd(s.ssr+1,s.ssc,s.ssr,s.ssc,visited))
+                if(canAdd(s.fsr,s.fsc,s.fsr+1,s.fsc,visited))
                 {
-                    Sofa newSofa=Sofa(s.ssr+1,s.ssc,s.ssr,s.ssc,'V',s.moves+1);
+                    Sofa newSofa(s.fsr,s.fsc,s.fsr+1,s.fsc,'V',s.moves+1);
                     q.push(newSofa);
                 }
-                if (canAdd(s.fsr,s.fsc,s.fsr+1,s.fsc,visited))
+
+                if(canAdd(s.fsr,s.ssc,s.fsr+1,s.ssc,visited))
                 {
-                    Sofa newSofa=Sofa(s.fsr,s.fsc,s.fsr+1,s.fsc,'V',s.moves+1);
+                    Sofa newSofa(s.fsr,s.ssc,s.fsr+1,s.ssc,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
         }
-        if(s.dir == 'V'){
-            //check if we can move down
-            if(s.ssr < R-1 && grid[s.ssr+1][s.ssc] != 'H'){
-                if(canAdd(s.ssr, s.ssc, s.ssr+1, s.ssc, visited)){
-                    Sofa newSofa = Sofa(s.ssr, s.ssc, s.ssr+1, s.ssc, 'V', s.moves+1);
+
+        if(s.dir=='V')
+        {
+            if(s.ssr+1<R && grid[s.ssr+1][s.ssc]!='H')
+            {
+                if(canAdd(s.fsr+1,s.fsc,s.ssr+1,s.ssc,visited))
+                {
+                    Sofa newSofa(s.fsr+1,s.fsc,s.ssr+1,s.ssc,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
-            //check if we can move up
-            if(s.fsr > 0 && grid[s.fsr-1][s.fsc] != 'H'){
-                if(canAdd(s.fsr-1, s.fsc, s.fsr, s.fsc, visited)){
-                    Sofa newSofa = Sofa(s.fsr-1, s.fsc, s.fsr, s.fsc, 'V', s.moves+1);
+            if(s.fsr>0 && grid[s.fsr-1][s.fsc]!='H')
+            {
+                if(canAdd(s.fsr-1,s.fsc,s.ssr-1,s.ssc,visited))
+                {
+                    Sofa newSofa(s.fsr-1,s.fsc,s.ssr-1,s.ssc,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
-            //check if we can move left
-            if(s.fsc > 0 && grid[s.fsr][s.fsc-1] != 'H' && grid[s.ssr][s.ssc-1] != 'H'){
-                if(canAdd(s.fsr, s.fsc-1, s.ssr, s.ssc-1, visited)){
-                    Sofa newSofa = Sofa(s.fsr, s.fsc-1, s.ssr, s.ssc-1, 'V', s.moves+1);
+            if(s.fsc>0 && grid[s.fsr][s.fsc-1]!='H' && grid[s.ssr][s.ssc-1]!='H')
+            {
+                if(canAdd(s.fsr,s.fsc-1,s.ssr,s.ssc-1,visited))
+                {
+                    Sofa newSofa(s.fsr,s.fsc-1,s.ssr,s.ssc-1,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
-            //check if we can move right
-            if(s.fsc < C-1 && grid[s.fsr][s.fsc+1] != 'H' && grid[s.ssr][s.ssc+1] != 'H'){
-                if(canAdd(s.fsr, s.fsc+1, s.ssr, s.ssc+1, visited)){
-                    Sofa newSofa = Sofa(s.fsr, s.fsc+1, s.ssr, s.ssc+1, 'V', s.moves+1);
+            if(s.fsc+1<C && grid[s.fsr][s.fsc+1]!='H' && grid[s.ssr][s.ssc+1]!='H')
+            {
+                if(canAdd(s.fsr,s.fsc+1,s.ssr,s.ssc+1,visited))
+                {
+                    Sofa newSofa(s.fsr,s.fsc+1,s.ssr,s.ssc+1,'V',s.moves+1);
                     q.push(newSofa);
                 }
             }
 
 
-            if(s.fsc > 0 && grid[s.fsr][s.fsc-1] != 'H' && grid[s.ssr][s.ssc-1] != 'H'){
-                if(canAdd(s.fsr, s.fsc-1, s.fsr, s.fsc, visited)){
-                    Sofa newSofa = Sofa(s.fsr, s.fsc-1, s.fsr, s.fsc, 'H', s.moves+1);
+
+
+            if(s.fsc>0 && grid[s.fsr][s.fsc-1]!='H' && grid[s.ssr][s.ssc-1]!='H')
+            {
+                if(canAdd(s.fsr,s.fsc-1,s.fsr,s.fsc,visited))
+                {
+                    Sofa newSofa(s.fsr,s.fsc-1,s.fsr,s.fsc,'H',s.moves+1);
                     q.push(newSofa);
                 }
-                if(canAdd(s.ssr, s.ssc, s.ssr, s.ssc-1, visited)){
-                    Sofa newSofa = Sofa(s.ssr, s.ssc, s.ssr, s.ssc-1, 'H', s.moves+1);
+
+                if(canAdd(s.ssr,s.ssc-1,s.ssr,s.ssc,visited))
+                {
+                    Sofa newSofa(s.ssr,s.ssc-1,s.ssr,s.ssc,'H',s.moves+1);
                     q.push(newSofa);
                 }
             }
-            if(s.fsc < C-1 && grid[s.fsr][s.fsc+1] != 'H' && grid[s.ssr][s.ssc+1] != 'H'){
-                if(canAdd(s.fsr, s.fsc+1, s.fsr, s.fsc, visited)){
-                    Sofa newSofa = Sofa(s.fsr, s.fsc+1, s.fsr, s.fsc, 'H', s.moves+1);
+            if(s.fsc+1<C && grid[s.fsr][s.fsc+1]!='H' && grid[s.ssr][s.ssc+1]!='H')
+            {
+                if(canAdd(s.fsr,s.fsc,s.fsr,s.fsc+1,visited))
+                {
+                    Sofa newSofa(s.fsr,s.fsc,s.fsr,s.fsc+1,'H',s.moves+1);
                     q.push(newSofa);
                 }
-                if(canAdd(s.ssr, s.ssc, s.ssr, s.ssc+1, visited)){
-                    Sofa newSofa = Sofa(s.ssr, s.ssc, s.ssr, s.ssc+1, 'H', s.moves+1);
+
+                if(canAdd(s.ssr,s.ssc,s.ssr,s.ssc+1,visited))
+                {
+                    Sofa newSofa(s.ssr,s.ssc,s.ssr,s.ssc+1,'H',s.moves+1);
                     q.push(newSofa);
                 }
             }
         }
     }
-    cout << "Impossible" << endl;
+
+    cout<<"Impossible"<<endl;
     return 0;
 }
-
